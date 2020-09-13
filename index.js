@@ -6,22 +6,19 @@ const port = process.env.PORT || 3000;
 const app = dialogflow({debug:true});
 const fetch = require('node-fetch');
 
+//default intent
 app.intent('Default Welcome Intent', (conv)=>{
     conv.ask('Hello world!!');
 });
-app.intent('get train number',(conv,{number})=>{
-    var result;
-let data = fetch("https://your-first-herokus-app.herokuapp.com/status/02723/yesterday")
-.then(response => response.json())
-.then(jsondata=> {
-  result = jsondata.data;
-  console.log(result);
-return result;})
-.then(result => conv.close('The status of train number'+number+'is amazing!'+result));
-return conv.close('The status of train number'+number+'is amazing!');
+
+//tracking intent
+app.intent('get train number',async (conv,{number})=>{
+let trainNum = conv.body.queryResult.queryText;
+const response = await fetch("https://your-first-herokus-app.herokuapp.com/status/"+trainNum+"/today");
+const jsonData = await response.json();
+const voiceResponse = jsonData.data;
+conv.close(voiceResponse);
 });
-
-
 
 const expressApp = express().use(bodyParser.json());
 expressApp.post('/webhook',app);
